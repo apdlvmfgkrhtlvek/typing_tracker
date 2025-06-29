@@ -8,6 +8,14 @@ import sys
 import time
 import math
 
+# TODO
+# gif 변경 gui만들기 
+# txt파일에 통계 배열 저장하기 
+# 통계 보는 gui만들기  
+# 단축키 설정해서 위치 옮길 수 있게만들기 
+# 코드 최적화 
+# 할 수 있으면 매크로 기능 + 매크로 gui까지 
+
 class WPMTracker(QtWidgets.QWidget):
     toggle_timer = pyqtSignal(bool)
 
@@ -40,34 +48,49 @@ class WPMTracker(QtWidgets.QWidget):
         self.toggle_timer.connect(self.handle_timer)
         self.timer2.start(1000) 
         
-    def init_ui(self): # ui 생성
+    def init_ui(self):
+        screen = QtWidgets.QApplication.primaryScreen()
+        screen_geometry = screen.availableGeometry()
+        screen_width = screen_geometry.width()
+        screen_height = screen_geometry.height()
+
+        gif_width = 220
+        gif_height = 147
+        margin_x = 20
+        margin_y = 20
+
+        # 윈도우 위치를 왼쪽 아래에 붙임
+        window_x = margin_x
+        window_y = screen_height - gif_height - margin_y
+        window_width = gif_width + 150  # 텍스트 라벨 포함해서 너비 좀 넓게
+        window_height = gif_height
+
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.Tool)
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
-        self.setGeometry(-150, 1130, 600, 1000)# tq 해상도 맞춰서 움직이게 설정해야됨 지금은 1920 x 1200기준
+        self.setGeometry(window_x, window_y, window_width, window_height)
 
+        # 텍스트 라벨
         self.label = QtWidgets.QLabel(self)
-        self.label.setStyleSheet("color: white; font-size: 30px; font-weight:bold; background-color: rgba(0,0,0,0);")
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(self.label)
-        self.setLayout(layout)
+        self.label.setGeometry(gif_width, 0, 150, gif_height)  # gif 오른쪽에 붙이임
+        self.label.setStyleSheet("color: white; font-size: 20px; font-weight:bold; background-color: rgba(0,0,0,0);")
+        self.label.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
 
         shadow = QGraphicsDropShadowEffect()
         shadow.setBlurRadius(8)
         shadow.setOffset(1, 1)
-        shadow.setColor(QtGui.QColor(0, 0, 0))  # 검정색 그림자
-
+        shadow.setColor(QtGui.QColor(0, 0, 0))
         self.label.setGraphicsEffect(shadow)
 
-        
-        self.gif_label = QtWidgets.QLabel(self) #gif랑 텍스트랑 위치 따로 배치하기위해서 따로 라벨생성
-        self.gif_label.setGeometry(200, 250, 220, 147)
+        # gif 라벨
+        self.gif_label = QtWidgets.QLabel(self)
+        self.gif_label.setGeometry(0, 0, gif_width, gif_height)
 
         self.movie = QMovie("gif/keyboard-type-cat.gif")
         self.gif_label.setMovie(self.movie)
-        self.movie.setScaledSize(QSize(220,147))
+        self.movie.setScaledSize(QSize(gif_width, gif_height))
         self.movie.start()
+
+
 
 
     def on_press(self, key): # 눌릴때 코드
@@ -101,7 +124,7 @@ class WPMTracker(QtWidgets.QWidget):
         except AttributeError:
             pass
 
-    def on_release(self, key):
+    def on_release(self, key): # 임마는 때질때 코드 
         # try:
         #     if hasattr(key, 'char') and key.char:
         #         self.pressed_keys.add(key.char.lower())
@@ -127,7 +150,7 @@ class WPMTracker(QtWidgets.QWidget):
 
 
     def update_timer(self):
-        self.total_time += 1 
+        self.total_time += 1
 
     def handle_timer(self,is_start):
         if is_start:
@@ -142,7 +165,7 @@ class WPMTracker(QtWidgets.QWidget):
         current_time = time.time()
         time_df = current_time - self.start
 
-        if current_time - self.last_key_typed > 6: # 입력 안할때 그냥 wpm 측정안하기
+        if current_time - self.last_key_typed > 5: # 입력 안할때 그냥 wpm 측정안하기
             self.start = current_time
             self.typed = 0
             self.movie.setSpeed(0)
@@ -180,10 +203,10 @@ class WPMTracker(QtWidgets.QWidget):
             self.best_wpm = wpm
 
         self.label.setText(
-            f"wpm : {wpm}\n"
-            f"best wpm : {self.best_wpm}\n"
-            f"총 글자수 : {self.total_typed}\n"
-            f"타이핑 시간 : {self.total_time}초"
+            f"{wpm} wpm\n"
+            f"{self.best_wpm} Bwpm\n"
+            f"{self.total_typed} TOTAL\n"
+            f"{self.total_time}Second"
         )
          
 
