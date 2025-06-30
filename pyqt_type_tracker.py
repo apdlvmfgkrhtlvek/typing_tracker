@@ -7,8 +7,9 @@ from PyQt5.QtCore import QSize
 import sys
 import time
 import math
+import json
 
-# TODO
+# TODO 
 # gif 변경 gui만들기 
 # txt파일에 통계 배열 저장하기 
 # 통계 보는 gui만들기  
@@ -27,6 +28,7 @@ class WPMTracker(QtWidgets.QWidget):
         self.total_time = 0
 
         self.total_key_typed_arr = [0] * 40
+        self.total_key_typed_arr_size = 0
 
         self.typed = 0
         self.last_key_typed = 0
@@ -72,7 +74,7 @@ class WPMTracker(QtWidgets.QWidget):
         # 텍스트 라벨
         self.label = QtWidgets.QLabel(self)
         self.label.setGeometry(gif_width, 0, 150, gif_height)  # gif 오른쪽에 붙이임
-        self.label.setStyleSheet("color: white; font-size: 20px; font-weight:bold; background-color: rgba(0,0,0,0);")
+        self.label.setStyleSheet("color: white;font-family: 'Pretendard'; font-size: 30px; font-weight:bold; background-color: rgba(0,0,0,0);")
         self.label.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
 
         shadow = QGraphicsDropShadowEffect()
@@ -115,11 +117,16 @@ class WPMTracker(QtWidgets.QWidget):
             if ch.isalpha():       
                 self.idx = ord(ch.lower()) - ord('a')
                 self.total_key_typed_arr[self.idx] += 1
+                self.total_key_typed_arr_size += 1
 
             elif ch.isdigit():
                 self.idx = 26 + (ord(ch) - ord('0'))
                 self.total_key_typed_arr[self.idx] += 1
-           
+                self.total_key_typed_arr_size += 1  
+
+            if self.total_key_typed_arr_size % 100 == 0 :
+                with open('saves/total_key_typed.json','w') as f:
+                    json.dump(self.total_key_typed_arr,f)         
 
         except AttributeError:
             pass
@@ -138,14 +145,14 @@ class WPMTracker(QtWidgets.QWidget):
         #     QtWidgets.QApplication.quit()
 
         try:
-            if key.char:
+            if key.char:   
                 self.pressed_keys.add(key.char.lower())
         except AttributeError:
             if key == keyboard.Key.esc:
                 self.pressed_keys.add('esc')
 
         if 'esc' in self.pressed_keys and 'q' in self.pressed_keys:
-            print(self.total_key_typed_arr)
+            print(self.total_key_typed_arr) # TODO 이거 배열 저장 꼭 하쇼
             QtWidgets.QApplication.quit()   
 
 
@@ -179,7 +186,7 @@ class WPMTracker(QtWidgets.QWidget):
         b = time_df / 60
         base_wpm = a/b
 
-        if time_df < 5 and self.typed < 10: # 입력 초반에 wpm 뻥튀기 막기
+        if time_df < 5 and self.typed < 15: # 입력 초반에 wpm 뻥튀기 막기
             wpm = 0           
         else:
             wpm = math.trunc(base_wpm)
@@ -205,8 +212,8 @@ class WPMTracker(QtWidgets.QWidget):
         self.label.setText(
             f"{wpm} wpm\n"
             f"{self.best_wpm} Bwpm\n"
-            f"{self.total_typed} TOTAL\n"
-            f"{self.total_time}Second"
+            f"{self.total_typed} total\n"
+            f"{self.total_time} Second"
         )
          
 
